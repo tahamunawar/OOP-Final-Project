@@ -1,22 +1,28 @@
-#pragma once
-
 #include <SDL2/SDL.h>
 #include <SDL2_image/SDL_image.h>
 #include <SDL2_ttf/SDL_ttf.h>
-#include "SpiderMan.hpp"
+#include <iostream>
+
+enum GameState {
+    STARTUP,
+    MAIN_GAME
+    // Add more states if needed
+};
 
 class Game {
 public:
     Game();
     ~Game();
-
     void run();
 
 private:
     bool isPointInsideRect(int x, int y, SDL_Rect rect);
     void handleEvents();
     void update();
-    void render();
+    void renderStartup();
+    void renderMain();
+    void clean();
+    GameState gamestate;
 
     SDL_Window* window;
     SDL_Renderer* renderer;
@@ -24,10 +30,13 @@ private:
     SDL_Texture* backgroundTexture;
     SDL_Texture* startButtonTexture;
     SDL_Texture* instructionsButtonTexture;
+    SDL_Texture* spidermanTexture;
+
     TTF_Font* font;
 
     SDL_Texture* firstSentenceTexture;
     SDL_Rect firstSentenceRect;
+
     SDL_Texture* secondSentenceTexture;
     SDL_Rect secondSentenceRect;
 
@@ -39,6 +48,4 @@ private:
     bool showInstructions;
     Uint32 instructionsStartTime;
     Uint32 instructionsDisplayDuration;
-
-    SpiderMan spiderMan; // Added SpiderMan object
 };

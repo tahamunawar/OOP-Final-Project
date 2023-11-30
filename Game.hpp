@@ -5,8 +5,9 @@
 
 enum GameState {
     STARTUP,
-    MAIN_GAME
+    MAIN_GAME,
     // Add more states if needed
+    level1
 };
 
 class Game {
@@ -20,7 +21,7 @@ private:
     void handleEvents();
     void update();
     void renderStartup();
-    void renderMain();
+    void renderLevel1();
     void clean();
     GameState gamestate;
 
@@ -30,8 +31,6 @@ private:
     SDL_Texture* backgroundTexture;
     SDL_Texture* startButtonTexture;
     SDL_Texture* instructionsButtonTexture;
-    SDL_Texture* spidermanTexture;
-
     TTF_Font* font;
 
     SDL_Texture* firstSentenceTexture;
@@ -49,3 +48,4 @@ private:
     Uint32 instructionsStartTime;
     Uint32 instructionsDisplayDuration;
 };
+

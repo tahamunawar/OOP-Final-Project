@@ -1,0 +1,12 @@
+This text file contains the url links of the websites we obtained the assets from.
+
+background.png : https://trumpwallpapers.com/pixel-art-wallpapers/pixel-art-wallpaper-01-1920-x-1080/
+instructions.png : 
+start.png : 
+spiderman_sprite_sheet.png : https://www.spriters-resource.com/custom_edited/marvelcomicscustoms/sheet/108731/
+villain_sprite1.png : https://www.deviantart.com/xmaygrrr/art/Spiderman-Villanos-Srpite-Jus-914121915
+villain_sprite2.png : https://www.deviantart.com/blzofozz/art/Spider-Man-Sprites-346389484
+medkit.png : https://www.pixilart.com/art/medkit-8327f5052eec732
+platform.png : https://www.dragonsports.eu/en/51380-short-stick.html
+
+

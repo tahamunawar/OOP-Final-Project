@@ -1,12 +1,3 @@
-#include "Game.hpp"
-
-int main(int argc, char* argv[]) {
-    Game game;
-    game.run();
-
-    return 0;
-}
-
 // #include <SDL2/SDL.h>
 // #include <SDL2_image/SDL_image.h>
 // #include <SDL2_ttf/SDL_ttf.h>
@@ -198,3 +189,11 @@ int main(int argc, char* argv[]) {
 
 //     return 0;
 // }
+
+#include "Game.hpp"
+
+int main(int argc, char* argv[]) {
+    Game game;
+    game.run();
+    return 0;
+}

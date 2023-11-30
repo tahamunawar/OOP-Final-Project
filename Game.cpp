@@ -1,28 +1,11 @@
-#include "game.hpp"
+#include "Game.hpp"
+#include "unit.hpp"
+#include "Spiderman.hpp"
+#include "healthpowerup.hpp"
+#include "attackpowerup.hpp"
+#include "goblin.hpp"
 
-struct Unit{
-    SDL_Rect srcRect, moverRect;
-    bool operator == (Unit u1) const;
-};
-
-Unit running1 = {{111,399, 37, 36}, {30, 40, 37, 36}};
-Unit running2 = {{158,400, 39, 35}, {30, 40, 39, 35}};
-Unit running3 = {{208,400, 38, 35}, {30, 40, 38, 35}};
-Unit running4 = {{260,402, 40, 34}, {30, 40, 40, 34}};
-Unit running5 = {{15,400, 38, 35}, {30, 40, 38, 35}};
-Unit running6 = {{61, 399, 40, 36}, {30, 40, 40, 36}}; 
-Unit running[] = {running1, running2, running3, running4, running5, running6};
-
-Unit idle = {{23, 79, 23, 44}, {50, 520, 30, 57}};
-
-Unit spiderman = idle;
-
-//making operator to check the stance of the object
-bool Unit::operator == (Unit u1) const{
-    if (srcRect.x == u1.srcRect.x && srcRect.y == u1.srcRect.y 
-     && srcRect.w == u1.srcRect.w && srcRect.h == u1.srcRect.h) return true;
-    else return false;
-}
+Spiderman spooder;
 
 Game::Game() : quit(false), gameStarted(false), showInstructions(false), instructionsStartTime(0), instructionsDisplayDuration(2000), gamestate(STARTUP) {
     // Initialize SDL
@@ -77,14 +60,6 @@ Game::Game() : quit(false), gameStarted(false), showInstructions(false), instruc
         return;
     }
 
-    spidermanTexture = IMG_LoadTexture(renderer, "spiderman_sprite_sheet.png");
-    if (spidermanTexture == nullptr) {
-        std::cerr << "IMG_LoadTexture Error: " << IMG_GetError() << std::endl;
-        clean();
-        quit = true;
-        return;
-    }
-
     // Load start button PNG image
     startButtonTexture = IMG_LoadTexture(renderer, "start.png");
     if (startButtonTexture == nullptr) {
@@ -104,7 +79,7 @@ Game::Game() : quit(false), gameStarted(false), showInstructions(false), instruc
     }
 
     // Load font
-    font = TTF_OpenFont("/Users/neeyazie17/Downloads/project stuff/retro.ttf", 24);
+    font = TTF_OpenFont("/Users/tahamunawar/Desktop/EDUCATION/1) HABIB UNIVERSITY (VERY IMPORTANT FOLDER)/Sem 3/OOPLECTURE/project stuff/retro.ttf", 24);
     if (font == nullptr) {
         std::cerr << "TTF_OpenFont Error: " << TTF_GetError() << std::endl;
         clean();
@@ -128,6 +103,8 @@ Game::Game() : quit(false), gameStarted(false), showInstructions(false), instruc
     // Button rectangles
     startButtonRect = { 350, 150, 300, 100 };
     instructionsButtonRect = { 350, 300, 300, 50 };
+
+    spooder = Spiderman(renderer);
 }
 
 Game::~Game() {
@@ -139,7 +116,7 @@ void Game::run() {
         handleEvents();
         update();
         if (gamestate == STARTUP) renderStartup();
-        else if (gamestate == MAIN_GAME) renderMain();
+        else if (gamestate == level1) renderLevel1();
     }
 }
 
@@ -150,8 +127,6 @@ bool Game::isPointInsideRect(int x, int y, SDL_Rect rect) {
 void Game::handleEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
-        bool runningState = false;
-        Unit runningStance = running[0];
         switch (event.type) {
             case SDL_QUIT:
                 quit = true;
@@ -162,7 +137,7 @@ void Game::handleEvents() {
                     int mouseY = event.button.y;
                     if (gamestate == STARTUP) {
                         if (isPointInsideRect(mouseX, mouseY, startButtonRect)) {
-                            gamestate = MAIN_GAME;
+                            gamestate = level1;
                         } else if (isPointInsideRect(mouseX, mouseY, instructionsButtonRect)) {
                             showInstructions = true;
                             instructionsStartTime = SDL_GetTicks();
@@ -170,10 +145,6 @@ void Game::handleEvents() {
                     }
                     // Add more conditions for other states if needed
                 }
-                break;
-            case SDL_BUTTON_RIGHT:
-                if (!runningState) runningStance = running[0];
-                else 
                 break;
         }
     }
@@ -190,14 +161,26 @@ void Game::update() {
     // Add more logic for other states if needed
 }
 
-void Game::renderMain() {
+void Game::renderLevel1() {
     // Clear the renderer
     SDL_RenderClear(renderer);
 
     // Render the background texture
     SDL_RenderCopy(renderer, backgroundTexture, nullptr, nullptr);
 
-    SDL_RenderCopy(renderer, spidermanTexture, &spiderman.srcRect, &spiderman.moverRect);
+    Goblin gg = Goblin(renderer);
+    AttackPowerUp firstAttack = AttackPowerUp(renderer, 400, 400);
+    AttackPowerUp secondAttack = AttackPowerUp(renderer, 300, 300);
+    HealthPowerUp firstHealth = HealthPowerUp(renderer, 100, 100);
+    HealthPowerUp secondHealth = HealthPowerUp(renderer, 200, 200);
+
+    // Render all things in this level
+    gg.render();
+    spooder.render();
+    firstAttack.render();
+    secondAttack.render();
+    firstHealth.render();
+    secondHealth.render();
 
     // Update the window
     SDL_RenderPresent(renderer);
@@ -240,3 +223,4 @@ void Game::clean() {
     IMG_Quit();
     SDL_Quit();
 }
+

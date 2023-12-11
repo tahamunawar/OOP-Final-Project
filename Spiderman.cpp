@@ -1,6 +1,6 @@
 #include "Spiderman.hpp"
 
-Spiderman::Spiderman(SDL_Renderer* _renderer)
+Spiderman::Spiderman(SDL_Renderer* _renderer) : velocityX(0), velocityY(0), gravity(0.5), isJumping(false)
 {
     renderer = _renderer;
     spidermanTexture = IMG_LoadTexture(renderer, "spiderman_sprite_sheet.png");
@@ -10,10 +10,51 @@ Spiderman::Spiderman(SDL_Renderer* _renderer)
         SDL_DestroyTexture(spidermanTexture);
     }
     srcRect = {23, 79, 23, 44};
-    moverRect = {50, 450, 100, 200};
+    moverRect = {50, 450, 50, 100};
 }
 
 void Spiderman::render()
 {
     SDL_RenderCopy(renderer, spidermanTexture, &srcRect, &moverRect);
+}
+
+void Spiderman::moveLeft()
+{
+    velocityX = -5; // Adjust the value based on your game
+}
+
+void Spiderman::moveRight()
+{
+    velocityX = 5; // Adjust the value based on your game
+}
+
+void Spiderman::resetVelocity()
+{
+    velocityX = 0;
+}
+void Spiderman::jump()
+{
+    if (!isJumping)
+    {
+        velocityY = -9.8; // Adjust the value based on your game
+        isJumping = true;
+    }
+}
+
+// Function to update Spiderman's position based on velocities
+void Spiderman::update()
+{
+    moverRect.x += static_cast<int>(velocityX);
+    moverRect.y += static_cast<int>(velocityY);
+
+    // Apply gravity
+    velocityY += gravity;
+
+    // Check if Spiderman is on the ground (you might need to adjust this based on your game)
+    if (moverRect.y >= 450)
+    {
+        moverRect.y = 450;
+        isJumping = false;
+        velocityY = 0;
+    }
 }

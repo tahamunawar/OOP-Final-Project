@@ -18,10 +18,31 @@
 
 class Spiderman : public Unit
 {
-    public:
-    Spiderman(){};
+private:
+    float velocityX;
+    float velocityY;
+
+    // Gravity value
+    float gravity;
+
+    // Jumping flag
+    bool isJumping;
+public:
+    Spiderman(){}
     Spiderman(SDL_Renderer* _renderer);
     SDL_Texture* spidermanTexture = nullptr;
     SDL_Renderer* renderer = nullptr;
     void render();
+
+    void update();
+
+    void resetVelocity();
+    
+    // Function to move Spiderman left
+    void moveLeft();
+
+    // Function to move Spiderman right
+    void moveRight();
+
+    void jump();
 };

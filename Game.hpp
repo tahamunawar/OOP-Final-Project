@@ -49,6 +49,9 @@ private:
     SDL_Rect startButtonRect;
     SDL_Rect instructionsButtonRect;
 
+    SDL_Texture* platformTexture;
+    SDL_Rect platformRect;
+
     bool quit;
     bool gameStarted;
     bool showInstructions;

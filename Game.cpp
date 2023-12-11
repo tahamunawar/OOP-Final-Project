@@ -78,8 +78,16 @@ Game::Game() : quit(false), gameStarted(false), showInstructions(false), instruc
         return;
     }
 
+    platformTexture = IMG_LoadTexture(renderer, "platform.png");
+    if (platformTexture == nullptr) {
+        std::cerr << "IMG_LoadTexture Error: " << IMG_GetError() << std::endl;
+        clean();
+        quit = true;
+        return;
+    }
+
     // Load font
-    font = TTF_OpenFont("/Users/tahamunawar/Desktop/EDUCATION/1) HABIB UNIVERSITY (VERY IMPORTANT FOLDER)/Sem 3/OOPLECTURE/project stuff/retro.ttf", 24);
+    font = TTF_OpenFont("retro.ttf", 24);
     if (font == nullptr) {
         std::cerr << "TTF_OpenFont Error: " << TTF_GetError() << std::endl;
         clean();
@@ -103,6 +111,7 @@ Game::Game() : quit(false), gameStarted(false), showInstructions(false), instruc
     // Button rectangles
     startButtonRect = { 350, 150, 300, 100 };
     instructionsButtonRect = { 350, 300, 300, 50 };
+    platformRect = {160, 760, 2000, 70};
 
     spooder = Spiderman(renderer);
 }
@@ -116,7 +125,10 @@ void Game::run() {
         handleEvents();
         update();
         if (gamestate == STARTUP) renderStartup();
-        else if (gamestate == level1) renderLevel1();
+        else if (gamestate == level1){
+            spooder.update();
+            renderLevel1();
+        } 
     }
 }
 
@@ -146,6 +158,35 @@ void Game::handleEvents() {
                     // Add more conditions for other states if needed
                 }
                 break;
+            case SDL_KEYDOWN:
+                // Check for keydown events to move Spiderman
+                switch (event.key.keysym.sym) {
+                    case SDLK_a:
+                        spooder.moveLeft();
+                        break;
+                    case SDLK_d:
+                        spooder.moveRight();
+                        break;
+                    case !SDLK_d && !SDLK_a:
+                        spooder.resetVelocity();
+                        break;
+                    case SDLK_w:
+                        // Implement jump logic here
+                        // For simplicity, you can move Spiderman vertically up for a short duration
+                        spooder.jump();
+                        break;
+                    }
+                break;
+            case SDL_KEYUP:
+                switch (event.key.keysym.sym) {
+                    case SDLK_a:
+                        spooder.resetVelocity();
+                        break;
+                    case SDLK_d:
+                        spooder.resetVelocity();
+                        break;
+                    }
+                break;
         }
     }
 }
@@ -163,24 +204,27 @@ void Game::update() {
 
 void Game::renderLevel1() {
     // Clear the renderer
+    SDL_DestroyTexture(startButtonTexture);
+    SDL_DestroyTexture(instructionsButtonTexture);
+    SDL_DestroyTexture(firstSentenceTexture);
+    SDL_DestroyTexture(secondSentenceTexture);
     SDL_RenderClear(renderer);
 
     // Render the background texture
     SDL_RenderCopy(renderer, backgroundTexture, nullptr, nullptr);
 
-    Goblin gg = Goblin(renderer);
-    AttackPowerUp firstAttack = AttackPowerUp(renderer, 400, 400);
-    AttackPowerUp secondAttack = AttackPowerUp(renderer, 300, 300);
-    HealthPowerUp firstHealth = HealthPowerUp(renderer, 100, 100);
-    HealthPowerUp secondHealth = HealthPowerUp(renderer, 200, 200);
+    SDL_Rect platformCoords = {-20, 550, 1200, 100};
+    SDL_RenderCopy(renderer, platformTexture, &platformRect, &platformCoords);
+
+    // Goblin gg = Goblin(renderer);
+    // AttackPowerUp firstAttack = AttackPowerUp(renderer, 400, 400);
+    // AttackPowerUp secondAttack = AttackPowerUp(renderer, 300, 300);
+    // HealthPowerUp firstHealth = HealthPowerUp(renderer, 100, 100);
+    // HealthPowerUp secondHealth = HealthPowerUp(renderer, 200, 200);
 
     // Render all things in this level
-    gg.render();
     spooder.render();
-    firstAttack.render();
-    secondAttack.render();
-    firstHealth.render();
-    secondHealth.render();
+    
 
     // Update the window
     SDL_RenderPresent(renderer);

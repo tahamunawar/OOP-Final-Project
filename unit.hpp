@@ -6,6 +6,7 @@
     #include <SDL_image.h>
 #endif
 #include <iostream>
+#include <cstring>
 using namespace std;
 #pragma once
 

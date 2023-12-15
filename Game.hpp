@@ -57,5 +57,6 @@ private:
     bool showInstructions;
     Uint32 instructionsStartTime;
     Uint32 instructionsDisplayDuration;
+    bool checkCollision(const SDL_Rect& rect1, const SDL_Rect& rect2);
 };
 

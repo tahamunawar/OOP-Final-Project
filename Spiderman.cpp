@@ -10,7 +10,7 @@ Spiderman::Spiderman(SDL_Renderer* _renderer) : velocityX(0), velocityY(0), grav
         SDL_DestroyTexture(spidermanTexture);
     }
     srcRect = {23, 79, 23, 44};
-    moverRect = {50, 450, 50, 100};
+    moverRect = {50, 420, 80, 130};
 }
 
 void Spiderman::render()
@@ -51,10 +51,20 @@ void Spiderman::update()
     velocityY += gravity;
 
     // Check if Spiderman is on the ground (you might need to adjust this based on your game)
-    if (moverRect.y >= 450)
+    if (moverRect.y >= 420)
     {
-        moverRect.y = 450;
+        moverRect.y = 420;
         isJumping = false;
         velocityY = 0;
     }
+}
+
+SDL_Rect Spiderman::getMoverRect() const
+{
+    return moverRect;
+}
+
+void Spiderman::decreaseHealth()
+{
+    spiderHealth-=10;
 }

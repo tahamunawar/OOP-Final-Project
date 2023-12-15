@@ -6,6 +6,8 @@
 #include "goblin.hpp"
 
 Spiderman spooder;
+Goblin gg;
+int backgroundX = 0;
 
 Game::Game() : quit(false), gameStarted(false), showInstructions(false), instructionsStartTime(0), instructionsDisplayDuration(2000), gamestate(STARTUP) {
     // Initialize SDL
@@ -114,10 +116,19 @@ Game::Game() : quit(false), gameStarted(false), showInstructions(false), instruc
     platformRect = {160, 760, 2000, 70};
 
     spooder = Spiderman(renderer);
+    gg = Goblin(renderer);
 }
 
 Game::~Game() {
     clean();
+}
+
+bool Game::checkCollision(const SDL_Rect& rect1, const SDL_Rect& rect2) 
+{
+    return rect1.x < rect2.x + rect2.w &&
+           rect1.x + rect1.w > rect2.x &&
+           rect1.y < rect2.y + rect2.h &&
+           rect1.y + rect1.h > rect2.y;
 }
 
 void Game::run() {
@@ -192,14 +203,40 @@ void Game::handleEvents() {
 }
 
 void Game::update() {
-    if (showInstructions) {
-        Uint32 currentTime = SDL_GetTicks();
-        if (currentTime - instructionsStartTime >= instructionsDisplayDuration) {
-            showInstructions = false;
+    if (gamestate == STARTUP)
+    {
+        if (showInstructions) {
+            Uint32 currentTime = SDL_GetTicks();
+            if (currentTime - instructionsStartTime >= instructionsDisplayDuration) {
+                showInstructions = false;
+            }
         }
     }
+    else if (gamestate == level1)
+    {
+        const int backgroundScrollSpeed = 1;
+        backgroundX += backgroundScrollSpeed;
 
-    // Add more logic for other states if needed
+        // Check if the background is completely off-screen to the left
+        if (backgroundX >= 1000) {
+            // Reset to the right edge of the window
+            backgroundX = 0;
+        }
+        
+
+        // Add more logic for other states if needed
+        
+        // Check collision between Spiderman and projectiles
+        for (auto& projectile : gg.getProjectiles()) {
+            if (checkCollision(spooder.getMoverRect(), projectile->getMoverRect())) {
+                // Handle collision, for example, decrease Spiderman's health
+                spooder.decreaseHealth();
+                // You can also mark the projectile for deletion here if needed
+                projectile->markForDeletion();
+            }
+        }
+    }
+    
 }
 
 void Game::renderLevel1() {
@@ -211,12 +248,16 @@ void Game::renderLevel1() {
     SDL_RenderClear(renderer);
 
     // Render the background texture
-    SDL_RenderCopy(renderer, backgroundTexture, nullptr, nullptr);
+    SDL_Rect backgroundRect = { backgroundX, 0, 1000, 600 };
+    SDL_RenderCopy(renderer, backgroundTexture, nullptr, &backgroundRect);
+
+    SDL_Rect backgroundRectExtra = { backgroundX - 1000, 0, 1000, 600 };
+    SDL_RenderCopy(renderer, backgroundTexture, nullptr, &backgroundRectExtra);
+
 
     SDL_Rect platformCoords = {-20, 550, 1200, 100};
     SDL_RenderCopy(renderer, platformTexture, &platformRect, &platformCoords);
 
-    // Goblin gg = Goblin(renderer);
     // AttackPowerUp firstAttack = AttackPowerUp(renderer, 400, 400);
     // AttackPowerUp secondAttack = AttackPowerUp(renderer, 300, 300);
     // HealthPowerUp firstHealth = HealthPowerUp(renderer, 100, 100);
@@ -224,7 +265,8 @@ void Game::renderLevel1() {
 
     // Render all things in this level
     spooder.render();
-    
+    gg.render();
+    gg.updateProjectiles();
 
     // Update the window
     SDL_RenderPresent(renderer);

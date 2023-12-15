@@ -27,6 +27,8 @@ private:
 
     // Jumping flag
     bool isJumping;
+
+    int spiderHealth=100;
 public:
     Spiderman(){}
     Spiderman(SDL_Renderer* _renderer);
@@ -45,4 +47,8 @@ public:
     void moveRight();
 
     void jump();
+
+    SDL_Rect getMoverRect() const;
+
+    void decreaseHealth();
 };

@@ -1,4 +1,5 @@
 #include "unit.hpp"
+#pragma once
 
 class Projectile : public Unit
 
@@ -8,7 +9,7 @@ class Projectile : public Unit
     const char* imgPath;
     bool markedForDeletion;
     public:
-    Projectile(SDL_Renderer* _renderer, const char *, const char * );
+    Projectile(SDL_Renderer* _renderer, const char *, const char *, int=0, int=0);
     ~Projectile();
     SDL_Texture* projectileTexture = nullptr;
     SDL_Renderer* renderer = nullptr;
@@ -18,5 +19,4 @@ class Projectile : public Unit
     // void setDamageDealt(int);
     void markForDeletion();
     bool isMarkedForDeletion();
-    SDL_Rect getMoverRect() const;
 };

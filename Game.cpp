@@ -89,7 +89,7 @@ Game::Game() : quit(false), gameStarted(false), showInstructions(false), instruc
     }
 
     // Load font
-    font = TTF_OpenFont("retro.ttf", 24);
+    font = TTF_OpenFont("font2.ttf", 24);
     if (font == nullptr) {
         std::cerr << "TTF_OpenFont Error: " << TTF_GetError() << std::endl;
         clean();
@@ -115,6 +115,14 @@ Game::Game() : quit(false), gameStarted(false), showInstructions(false), instruc
     instructionsButtonRect = { 350, 300, 300, 50 };
     platformRect = {160, 760, 2000, 70};
 
+    //adding powerups to our vector
+    PowerUp* att1 = new AttackPowerUp(renderer, 300, 420);
+    PowerUp* att2 = new AttackPowerUp(renderer, 400, 450);
+    PowerUp* health1 = new HealthPowerUp(renderer, 200, 450);
+    powerUps.push_back(att1);
+    powerUps.push_back(att2);
+    powerUps.push_back(health1);
+
     spooder = Spiderman(renderer);
     gg = Goblin(renderer);
 }
@@ -123,7 +131,31 @@ Game::~Game() {
     clean();
 }
 
+void Game::initializePowerUps()
+{
+    for (auto it = powerUps.begin(); it != powerUps.end(); )
+    {
+        if ((*it)->isMarkedForDeletion())
+        {
+            delete *it;  
+            it = powerUps.erase(it);
+        }
+        else
+        {
+            it++;
+        }
+    }
+}
+
 bool Game::checkCollision(const SDL_Rect& rect1, const SDL_Rect& rect2) 
+{
+    return rect1.x < rect2.x + rect2.w &&
+           rect1.x + rect1.w > rect2.x &&
+           rect1.y < rect2.y + rect2.h &&
+           rect1.y + rect1.h > rect2.y;
+}
+
+bool Game::checkPlatformCollision(const SDL_Rect& rect1, const SDL_Rect& rect2) 
 {
     return rect1.x < rect2.x + rect2.w &&
            rect1.x + rect1.w > rect2.x &&
@@ -143,6 +175,10 @@ void Game::run() {
         else if (gamestate == gameOver)
         {
             renderGameOver();
+        }
+        else if (gamestate == gameWon)
+        {
+            renderGameWon();
         } 
     }
 }
@@ -190,6 +226,10 @@ void Game::handleEvents() {
                         // For simplicity, you can move Spiderman vertically up for a short duration
                         spooder.jump();
                         break;
+                    case SDLK_p:
+                        // Shoot a web when the 'P' button is pressed
+                        spooder.shootWeb();
+                        break;
                     }
                 break;
             case SDL_KEYUP:
@@ -202,6 +242,8 @@ void Game::handleEvents() {
                         break;
                     }
                 break;
+            
+
         }
     }
 }
@@ -223,9 +265,11 @@ void Game::update() {
         SDL_DestroyTexture(firstSentenceTexture);
         SDL_DestroyTexture(secondSentenceTexture);
         if (spooder.getHealth() <= 0) {
-            // Set game state to GameOver
             gamestate = gameOver;
 
+        }
+        if (gg.getHealth() <=0) {
+            gamestate = gameWon;
         }
         {
             const int backgroundScrollSpeed = 1;
@@ -237,10 +281,7 @@ void Game::update() {
                 backgroundX = 0;
             }
         }
-        
-
-        // Add more logic for other states if needed
-        
+                
         // Check collision between Spiderman and projectiles
         for (auto& projectile : gg.getProjectiles()) {
             if (checkCollision(spooder.getMoverRect(), projectile->getMoverRect())) {
@@ -250,8 +291,36 @@ void Game::update() {
                 projectile->markForDeletion();
             }
         }
+        // Check if spiderman picked up the powerups or not
+        for (auto& powerUp : powerUps) {
+        if (checkCollision(spooder.getMoverRect(), powerUp->getMoverRect())) {
+            // Handle collision, for example, apply the power-up
+            powerUp->applyPowerUp(spooder);
+            // You can also mark the power-up for deletion here if needed
+            powerUp->MarkForDeletion();
+            }
+        }
+        // Check if spiderman's webs collide with goblin or not
+        for (auto& it : spooder.getWebs()) {
+            if ((checkCollision(gg.getMoverRect(), it->getMoverRect())) or (checkCollision({300, 470, 200, 20}, it->getMoverRect()))) 
+            {
+                // here we will call function that will reduce goblin's health
+                gg.takeDamage(spooder.getDamage());
+                // You can also mark the projectile for deletion here if needed
+                it->markForDeletion();
+            }
+        }
+
+        // Update spiderman attack boost
+        spooder.updateAttackBoost();
+        gg.update();
+
+        //SUSSY BAKA
+        if (checkPlatformCollision(spooder.getMoverRect(), {300, 470, 200, 20})) {
+        // If there's a collision, adjust Spiderman's position and velocity
+        spooder.handleCollision({300, 470, 200, 20});
+        }
     }
-    
 }
 
 void Game::renderLevel1() {
@@ -265,26 +334,29 @@ void Game::renderLevel1() {
     SDL_RenderCopy(renderer, backgroundTexture, nullptr, &backgroundRectExtra);
 
 
-    SDL_Rect platformCoords = {-20, 550, 1200, 100};
-    SDL_RenderCopy(renderer, platformTexture, &platformRect, &platformCoords);
+        // Render the ground platform
+    SDL_Rect groundPlatformCoords = {-20, 550, 1200, 100};
+    SDL_RenderCopy(renderer, platformTexture, &platformRect, &groundPlatformCoords);
 
-    // AttackPowerUp firstAttack = AttackPowerUp(renderer, 400, 400);
-    // AttackPowerUp secondAttack = AttackPowerUp(renderer, 300, 300);
-    // HealthPowerUp firstHealth = HealthPowerUp(renderer, 100, 100);
-    // HealthPowerUp secondHealth = HealthPowerUp(renderer, 200, 200);
+    // Render the first elevated platform
+    SDL_Rect elevatedPlatform1Coords = {300, 470, 200, 20}; // Adjust the position and size
+    SDL_RenderCopy(renderer, platformTexture, &platformRect, &elevatedPlatform1Coords);
 
-    // this code block is for displaying spiderman's health
-    std::string healthText = "Spiderman Health: " + std::to_string(spooder.getHealth());
-    SDL_Surface* healthSurface = TTF_RenderText_Solid(font, healthText.c_str(), { 255, 255, 255 });
-    SDL_Texture* healthTexture = SDL_CreateTextureFromSurface(renderer, healthSurface);
-    SDL_Rect healthRect = { 10, 10, healthSurface->w, healthSurface->h };
-    SDL_RenderCopy(renderer, healthTexture, nullptr, &healthRect);
+    // Render the second elevated platform
+    SDL_Rect elevatedPlatform2Coords = {600, 300, 200, 20}; // Adjust the position and size
+    SDL_RenderCopy(renderer, platformTexture, &platformRect, &elevatedPlatform2Coords);
+
+
+
+    initializePowerUps();
 
     // Render all things in this level
     spooder.render();
     gg.render();
     gg.updateProjectiles();
-
+    for (auto& powerUp : powerUps) {
+            powerUp->render();
+        }
     // Update the window
     SDL_RenderPresent(renderer);
 }
@@ -329,6 +401,21 @@ void Game::renderGameOver()
     SDL_RenderPresent(renderer);
 }
 
+void Game::renderGameWon()
+{
+    SDL_RenderClear(renderer);
+    SDL_DestroyTexture(backgroundTexture);
+    SDL_Texture* wonScreenTexture = IMG_LoadTexture(renderer, "gameWon.png");
+    if (wonScreenTexture == nullptr) {
+        std::cerr << "IMG_LoadTexture Error: " << IMG_GetError() << std::endl;
+        clean();
+        quit = true;
+        return;
+    }
+    SDL_RenderCopy(renderer, wonScreenTexture, nullptr, nullptr);
+    SDL_RenderPresent(renderer);
+}
+
 void Game::clean() {
     SDL_DestroyTexture(backgroundTexture);
     SDL_DestroyTexture(startButtonTexture);
@@ -341,4 +428,5 @@ void Game::clean() {
     IMG_Quit();
     SDL_Quit();
 }
+
 

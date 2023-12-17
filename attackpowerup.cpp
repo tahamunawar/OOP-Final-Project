@@ -10,7 +10,7 @@ AttackPowerUp::AttackPowerUp(SDL_Renderer* _renderer, int x, int y)
         SDL_DestroyTexture(attackPowerUpTexture);
     }
     srcRect = {0,0,512,512};
-    moverRect = {x,y,100,100};
+    moverRect = {x,y,50,50};
 }
 
 void AttackPowerUp::render()
@@ -18,4 +18,7 @@ void AttackPowerUp::render()
     SDL_RenderCopy(renderer, attackPowerUpTexture, &srcRect, &moverRect);
 }
 
-void AttackPowerUp::applyPowerUp(){}
+void AttackPowerUp::applyPowerUp(Spiderman& s)
+{
+    s.activateAttackBoost();
+}

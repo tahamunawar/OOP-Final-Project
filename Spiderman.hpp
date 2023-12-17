@@ -1,5 +1,7 @@
 #include "unit.hpp"
-
+#include "projectile.hpp"
+#include "vector"
+#pragma once
 // class Spiderman : public Unit
 // {
 //     public:
@@ -29,6 +31,12 @@ private:
     bool isJumping;
 
     int spiderHealth=100;
+    int damagePerAttack=10;
+
+    bool attackBoostActive;
+    Uint32 attackBoostStartTime;
+    Uint32 attackBoostDuration;
+    bool justLanded = true;
 public:
     Spiderman(){}
     Spiderman(SDL_Renderer* _renderer);
@@ -48,9 +56,34 @@ public:
 
     void jump();
 
-    SDL_Rect getMoverRect() const;
-
     void decreaseHealth();
 
     int getHealth();
+
+    void increaseHealth();
+
+    void activateAttackBoost();
+    void updateAttackBoost();
+
+    // Function to render the attack boost message
+    void renderAttackBoostMessage();
+
+    // Function render the health text message
+    void renderHealthText();
+
+    // variables for rendering the attack boost message
+    TTF_Font* font;
+    SDL_Surface* textSurface;
+    SDL_Texture* textTexture;
+    SDL_Rect textRect;
+
+    std::vector<Projectile*> webs;
+
+    void shootWeb();
+    void updateWeb();
+    const std::vector<Projectile*>& getWebs() const;
+
+    int getDamage();
+    // SUSSY BAKA
+    void handleCollision(const SDL_Rect&);
 };

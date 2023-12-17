@@ -1,6 +1,6 @@
 #include "projectile.hpp"
 
-Projectile::Projectile(SDL_Renderer* _renderer, const char * _imgPath, const char * owner)
+Projectile::Projectile(SDL_Renderer* _renderer, const char * _imgPath, const char * owner, int x, int y)
 {
     imgPath = _imgPath;
     renderer = _renderer;
@@ -12,10 +12,14 @@ Projectile::Projectile(SDL_Renderer* _renderer, const char * _imgPath, const cha
     if (std::strcmp(imgPath, "villain_sprite1.png") == 0)
     {
         srcRect = {107,32,12,13};
-        moverRect = {800,500,50,50};
+        moverRect = {x,y,50,50};
     }
-    if (std::strcmp(owner, "goblin") == 0)
-        movingSpeed = 10;
+    else
+    {
+        srcRect = {59,349,11,4};
+        moverRect = {x,y,20,20};
+    }
+    movingSpeed = 10;
     markedForDeletion = false;
 }
 
@@ -38,7 +42,6 @@ void Projectile::move()
     
     if (moverRect.x < 0 or moverRect.x > 1000)
         markedForDeletion = true;
-
 }
 
 bool Projectile::isMarkedForDeletion()
@@ -66,7 +69,3 @@ void Projectile::markForDeletion()
     markedForDeletion = true;
 }
 
-SDL_Rect Projectile::getMoverRect() const
-{
-    return moverRect;
-}

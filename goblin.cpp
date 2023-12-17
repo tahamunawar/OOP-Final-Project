@@ -18,6 +18,7 @@ void Goblin::render()
 {
     SDL_RenderCopy(renderer, goblinTexture, &srcRect, &moverRect);
 
+    renderHealthText();
     if (!projectiles.empty())
     {
         for (auto& projectile : projectiles)
@@ -32,9 +33,9 @@ void Goblin::updateProjectiles()
     Uint32 currentTime = SDL_GetTicks();
 
     // Add a new projectile every few seconds (e.g., every 2000 milliseconds)
-    if (currentTime - lastProjectileTime >= 2000)
+    if (currentTime - lastProjectileTime >= 1000)
     {
-        Projectile* temp = new Projectile(renderer, "villain_sprite1.png", "goblin");
+        Projectile* temp = new Projectile(renderer, "villain_sprite1.png", "goblin", moverRect.x - 10, moverRect.y + moverRect.w/2);
         projectiles.push_back(temp);
         lastProjectileTime = currentTime;
     }
@@ -62,3 +63,41 @@ const std::vector<Projectile*>& Goblin::getProjectiles() const
     return projectiles;
 }
 
+void Goblin::takeDamage(int x)
+{
+    goblinHealth-=x;
+}
+
+void Goblin::renderHealthText()
+{
+    TTF_Font* font = TTF_OpenFont("font2.ttf", 24);
+    std::string healthText = "Goblin Health: " + std::to_string(goblinHealth);
+    SDL_Surface* healthSurface = TTF_RenderText_Solid(font, healthText.c_str(), {255, 255, 255});
+    SDL_Texture* healthTexture = SDL_CreateTextureFromSurface(renderer, healthSurface);
+
+    SDL_Rect healthRect = {400, 10, healthSurface->w, healthSurface->h};
+    SDL_RenderCopy(renderer, healthTexture, nullptr, &healthRect);
+
+    // Clean up the health surface and texture
+    SDL_FreeSurface(healthSurface);
+    SDL_DestroyTexture(healthTexture);
+}
+
+int Goblin::getHealth()
+{
+    return goblinHealth;
+}
+
+void Goblin::update()
+{
+    moverRect.y += goblinVelocityY;
+
+    // Check if the goblin has reached the top or bottom of the screen
+    if (moverRect.y <= 0) {
+        moverRect.y = 0;
+        goblinVelocityY = -goblinVelocityY; // Reverse the vertical velocity
+    } else if (moverRect.y + moverRect.h >= 550) {
+        moverRect.y = 550 - moverRect.h;
+        goblinVelocityY = -goblinVelocityY; // Reverse the vertical velocity
+    }
+}

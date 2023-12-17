@@ -12,10 +12,17 @@ class Goblin : public Unit
     const std::vector<Projectile*>& getProjectiles() const;
     void render();
     void updateProjectiles();
+    void takeDamage(int);
+    void renderHealthText();
+    int getHealth();
+    void update();
     private:
+    int goblinHealth = 100;
+    int goblinVelocityY = 5;
     std::vector<Projectile*> projectiles; 
     Uint32 lastProjectileTime;
     // Uint32 currentTime;
+
 };
 
 

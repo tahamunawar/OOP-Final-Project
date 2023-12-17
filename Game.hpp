@@ -8,14 +8,17 @@
     #include <SDL_ttf.h>
 #endif
 
+#include "powerup.hpp"
 #include <iostream>
+#include <vector>
 
 enum GameState {
     STARTUP,
     MAIN_GAME,
     // Add more states if needed
     level1, 
-    gameOver
+    gameOver,
+    gameWon
 };
 
 class Game {
@@ -23,6 +26,7 @@ public:
     Game();
     ~Game();
     void run();
+    void initializePowerUps();
 
 private:
     bool isPointInsideRect(int x, int y, SDL_Rect rect);
@@ -31,6 +35,7 @@ private:
     void renderStartup();
     void renderLevel1();
     void renderGameOver();
+    void renderGameWon();
     void clean();
     GameState gamestate;
 
@@ -60,5 +65,7 @@ private:
     Uint32 instructionsStartTime;
     Uint32 instructionsDisplayDuration;
     bool checkCollision(const SDL_Rect& rect1, const SDL_Rect& rect2);
+    bool checkPlatformCollision(const SDL_Rect& rect1, const SDL_Rect& rect2);
+    std::vector<PowerUp*> powerUps;
 };
 

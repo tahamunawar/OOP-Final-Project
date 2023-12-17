@@ -139,6 +139,10 @@ void Game::run() {
         else if (gamestate == level1){
             spooder.update();
             renderLevel1();
+        }
+        else if (gamestate == gameOver)
+        {
+            renderGameOver();
         } 
     }
 }
@@ -214,13 +218,24 @@ void Game::update() {
     }
     else if (gamestate == level1)
     {
-        const int backgroundScrollSpeed = 1;
-        backgroundX += backgroundScrollSpeed;
+        SDL_DestroyTexture(startButtonTexture);
+        SDL_DestroyTexture(instructionsButtonTexture);
+        SDL_DestroyTexture(firstSentenceTexture);
+        SDL_DestroyTexture(secondSentenceTexture);
+        if (spooder.getHealth() <= 0) {
+            // Set game state to GameOver
+            gamestate = gameOver;
 
-        // Check if the background is completely off-screen to the left
-        if (backgroundX >= 1000) {
-            // Reset to the right edge of the window
-            backgroundX = 0;
+        }
+        {
+            const int backgroundScrollSpeed = 1;
+            backgroundX += backgroundScrollSpeed;
+
+            // Check if the background is completely off-screen to the left
+            if (backgroundX >= 1000) {
+                // Reset to the right edge of the window
+                backgroundX = 0;
+            }
         }
         
 
@@ -240,11 +255,6 @@ void Game::update() {
 }
 
 void Game::renderLevel1() {
-    // Clear the renderer
-    SDL_DestroyTexture(startButtonTexture);
-    SDL_DestroyTexture(instructionsButtonTexture);
-    SDL_DestroyTexture(firstSentenceTexture);
-    SDL_DestroyTexture(secondSentenceTexture);
     SDL_RenderClear(renderer);
 
     // Render the background texture
@@ -262,6 +272,13 @@ void Game::renderLevel1() {
     // AttackPowerUp secondAttack = AttackPowerUp(renderer, 300, 300);
     // HealthPowerUp firstHealth = HealthPowerUp(renderer, 100, 100);
     // HealthPowerUp secondHealth = HealthPowerUp(renderer, 200, 200);
+
+    // this code block is for displaying spiderman's health
+    std::string healthText = "Spiderman Health: " + std::to_string(spooder.getHealth());
+    SDL_Surface* healthSurface = TTF_RenderText_Solid(font, healthText.c_str(), { 255, 255, 255 });
+    SDL_Texture* healthTexture = SDL_CreateTextureFromSurface(renderer, healthSurface);
+    SDL_Rect healthRect = { 10, 10, healthSurface->w, healthSurface->h };
+    SDL_RenderCopy(renderer, healthTexture, nullptr, &healthRect);
 
     // Render all things in this level
     spooder.render();
@@ -294,6 +311,21 @@ void Game::renderStartup(){
     }
 
     // Update the window
+    SDL_RenderPresent(renderer);
+}
+
+void Game::renderGameOver()
+{
+    SDL_RenderClear(renderer);
+    SDL_DestroyTexture(backgroundTexture);
+    SDL_Texture* overScreenTexture = IMG_LoadTexture(renderer, "gameOverMaster.png");
+    if (overScreenTexture == nullptr) {
+        std::cerr << "IMG_LoadTexture Error: " << IMG_GetError() << std::endl;
+        clean();
+        quit = true;
+        return;
+    }
+    SDL_RenderCopy(renderer, overScreenTexture, nullptr, nullptr);
     SDL_RenderPresent(renderer);
 }
 

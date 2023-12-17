@@ -14,7 +14,8 @@ enum GameState {
     STARTUP,
     MAIN_GAME,
     // Add more states if needed
-    level1
+    level1, 
+    gameOver
 };
 
 class Game {
@@ -29,6 +30,7 @@ private:
     void update();
     void renderStartup();
     void renderLevel1();
+    void renderGameOver();
     void clean();
     GameState gamestate;
 

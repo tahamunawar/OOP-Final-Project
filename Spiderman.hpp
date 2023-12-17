@@ -51,4 +51,6 @@ public:
     SDL_Rect getMoverRect() const;
 
     void decreaseHealth();
+
+    int getHealth();
 };

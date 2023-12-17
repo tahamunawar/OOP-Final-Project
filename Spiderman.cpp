@@ -68,3 +68,8 @@ void Spiderman::decreaseHealth()
 {
     spiderHealth-=10;
 }
+
+int Spiderman::getHealth()
+{
+    return spiderHealth;
+}

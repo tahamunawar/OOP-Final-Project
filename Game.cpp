@@ -53,6 +53,14 @@ Game::Game() : quit(false), gameStarted(false), showInstructions(false), instruc
         return;
     }
 
+
+    // Initialize SDL_mixer
+    // if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+    //     std::cerr << "SDL_mixer could not initialize! SDL_mixer Error: " << Mix_GetError() << std::endl;
+    //     quit = true;
+    //     return;
+    // }
+
     // Load background PNG image
     backgroundTexture = IMG_LoadTexture(renderer, "background.png");
     if (backgroundTexture == nullptr) {
@@ -97,6 +105,16 @@ Game::Game() : quit(false), gameStarted(false), showInstructions(false), instruc
         return;
     }
 
+    // Load background music
+    // backgroundMusic = Mix_LoadMUS("home screen.mp3");
+    // if (backgroundMusic == nullptr) {
+    //     std::cerr << "Failed to load background music! SDL_mixer Error: " << Mix_GetError() << std::endl;
+    //     quit = true;
+    //     return;
+    // }
+
+    // shootMusic = Mix_LoadMUS()
+
     // Create texture for instructions message
     SDL_Color textColor = { 255, 255, 255 }; // White color
     SDL_Surface* firstSentenceSurface = TTF_RenderText_Solid(font, "This is the first sentence", textColor);
@@ -125,6 +143,9 @@ Game::Game() : quit(false), gameStarted(false), showInstructions(false), instruc
 
     spooder = Spiderman(renderer);
     gg = Goblin(renderer);
+
+    // Mix_PlayMusic(backgroundMusic, -1);
+
 }
 
 Game::~Game() {
@@ -167,7 +188,10 @@ void Game::run() {
     while (!quit) {
         handleEvents();
         update();
-        if (gamestate == STARTUP) renderStartup();
+        if (gamestate == STARTUP)
+        { 
+            renderStartup();
+        }
         else if (gamestate == level1){
             spooder.update();
             renderLevel1();
@@ -286,7 +310,7 @@ void Game::update() {
         for (auto& projectile : gg.getProjectiles()) {
             if (checkCollision(spooder.getMoverRect(), projectile->getMoverRect())) {
                 // Handle collision, for example, decrease Spiderman's health
-                spooder.decreaseHealth();
+                spooder - 10;
                 // You can also mark the projectile for deletion here if needed
                 projectile->markForDeletion();
             }
@@ -427,6 +451,11 @@ void Game::clean() {
     SDL_DestroyWindow(window);
     IMG_Quit();
     SDL_Quit();
+
+    // Free background music
+    Mix_FreeMusic(backgroundMusic);
+    // Close SDL_mixer
+    Mix_CloseAudio();
 }
 
 

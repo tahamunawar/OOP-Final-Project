@@ -56,7 +56,7 @@ public:
 
     void jump();
 
-    void decreaseHealth();
+    // void decreaseHealth();
 
     int getHealth();
 
@@ -86,4 +86,6 @@ public:
     int getDamage();
     // SUSSY BAKA
     void handleCollision(const SDL_Rect&);
+
+    Spiderman operator-(int damage);
 };

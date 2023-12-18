@@ -113,10 +113,10 @@ void Spiderman::update() {
     updateWeb();
 }
 
-void Spiderman::decreaseHealth()
-{
-    spiderHealth-=10;
-}
+// void Spiderman::decreaseHealth()
+// {
+//     spiderHealth-=10;
+// }
 
 int Spiderman::getHealth()
 {
@@ -266,4 +266,10 @@ const std::vector<Projectile*>& Spiderman::getWebs() const
 int Spiderman::getDamage()
 {
     return damagePerAttack;
+}
+
+Spiderman Spiderman::operator-(int damage) {
+    // Subtract the damage from Spiderman's health
+    spiderHealth -= damage;
+    return *this;
 }

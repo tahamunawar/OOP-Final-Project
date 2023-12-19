@@ -1,14 +1,17 @@
 #include "Game.hpp"
+
 #include "unit.hpp"
 #include "Spiderman.hpp"
 #include "healthpowerup.hpp"
 #include "attackpowerup.hpp"
 #include "goblin.hpp"
 
+//initalising global objects
 Spiderman spooder;
 Goblin gg;
 int backgroundX = 0;
 
+//constructor call
 Game::Game() : quit(false), gameStarted(false), showInstructions(false), instructionsStartTime(0), instructionsDisplayDuration(2000), gamestate(STARTUP) {
     // Initialize SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
@@ -17,6 +20,21 @@ Game::Game() : quit(false), gameStarted(false), showInstructions(false), instruc
         return;
     }
 
+    // Initialize SDL_mixer
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+        std::cerr << "Mix_OpenAudio Error: " << Mix_GetError() << std::endl;
+        clean();
+        quit = true;
+        return;
+    }
+    //loading background music
+    backgroundMusic = Mix_LoadMUS("home screen.mp3");
+    if (backgroundMusic == nullptr) {
+        std::cerr << "Mix_LoadMUS Error: " << Mix_GetError() << std::endl;
+        clean();
+        quit = true;
+        return;
+    }
     // Initialize SDL_image
     if ((IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG) != IMG_INIT_PNG) {
         std::cerr << "IMG_Init Error: " << IMG_GetError() << std::endl;
@@ -53,14 +71,6 @@ Game::Game() : quit(false), gameStarted(false), showInstructions(false), instruc
         return;
     }
 
-
-    // Initialize SDL_mixer
-    // if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
-    //     std::cerr << "SDL_mixer could not initialize! SDL_mixer Error: " << Mix_GetError() << std::endl;
-    //     quit = true;
-    //     return;
-    // }
-
     // Load background PNG image
     backgroundTexture = IMG_LoadTexture(renderer, "background.png");
     if (backgroundTexture == nullptr) {
@@ -88,6 +98,7 @@ Game::Game() : quit(false), gameStarted(false), showInstructions(false), instruc
         return;
     }
 
+    //load platform texture
     platformTexture = IMG_LoadTexture(renderer, "platform.png");
     if (platformTexture == nullptr) {
         std::cerr << "IMG_LoadTexture Error: " << IMG_GetError() << std::endl;
@@ -105,25 +116,15 @@ Game::Game() : quit(false), gameStarted(false), showInstructions(false), instruc
         return;
     }
 
-    // Load background music
-    // backgroundMusic = Mix_LoadMUS("home screen.mp3");
-    // if (backgroundMusic == nullptr) {
-    //     std::cerr << "Failed to load background music! SDL_mixer Error: " << Mix_GetError() << std::endl;
-    //     quit = true;
-    //     return;
-    // }
-
-    // shootMusic = Mix_LoadMUS()
-
     // Create texture for instructions message
     SDL_Color textColor = { 255, 255, 255 }; // White color
-    SDL_Surface* firstSentenceSurface = TTF_RenderText_Solid(font, "This is the first sentence", textColor);
+    SDL_Surface* firstSentenceSurface = TTF_RenderText_Solid(font, "Move via WASD movements. Shoot Goblin via P.", textColor);
     firstSentenceTexture = SDL_CreateTextureFromSurface(renderer, firstSentenceSurface);
     firstSentenceRect = { 100, 400, firstSentenceSurface->w, firstSentenceSurface->h };
     SDL_FreeSurface(firstSentenceSurface);
 
     // Create texture for second sentence of instructions message
-    SDL_Surface* secondSentenceSurface = TTF_RenderText_Solid(font, "This is the second sentence", textColor);
+    SDL_Surface* secondSentenceSurface = TTF_RenderText_Solid(font, "Avoid goblin's attacks and get powerups for an extra boost.", textColor);
     secondSentenceTexture = SDL_CreateTextureFromSurface(renderer, secondSentenceSurface);
     secondSentenceRect = { 100, 430, secondSentenceSurface->w, secondSentenceSurface->h };
     SDL_FreeSurface(secondSentenceSurface);
@@ -134,28 +135,36 @@ Game::Game() : quit(false), gameStarted(false), showInstructions(false), instruc
     platformRect = {160, 760, 2000, 70};
 
     //adding powerups to our vector
-    PowerUp* att1 = new AttackPowerUp(renderer, 300, 420);
-    PowerUp* att2 = new AttackPowerUp(renderer, 400, 450);
-    PowerUp* health1 = new HealthPowerUp(renderer, 200, 450);
+    PowerUp* att1 = new AttackPowerUp(renderer, 660, 250);
+    PowerUp* att2 = new AttackPowerUp(renderer, 360, 370);
+    PowerUp* health1 = new HealthPowerUp(renderer, 850, 500);
     powerUps.push_back(att1);
     powerUps.push_back(att2);
     powerUps.push_back(health1);
 
     spooder = Spiderman(renderer);
     gg = Goblin(renderer);
-
-    // Mix_PlayMusic(backgroundMusic, -1);
-
 }
 
 Game::~Game() {
     clean();
 }
 
+//initialising powerups
 void Game::initializePowerUps()
-{
+{   
+    /*
+    if (SDL_GetTicks() % 5000 == 0){
+        PowerUp* p;
+        switch(rand() % 2){
+            case 0: p = new AttackPowerUp(renderer, 600 + 100, 100); break; 
+            case 1: p = new HealthPowerUp(renderer, 600 + 100, 100); break; 
+        }
+        powerUps.push_back(p);
+    }
+    */
     for (auto it = powerUps.begin(); it != powerUps.end(); )
-    {
+    {   
         if ((*it)->isMarkedForDeletion())
         {
             delete *it;  
@@ -168,6 +177,7 @@ void Game::initializePowerUps()
     }
 }
 
+//checking for collisions between two objects
 bool Game::checkCollision(const SDL_Rect& rect1, const SDL_Rect& rect2) 
 {
     return rect1.x < rect2.x + rect2.w &&
@@ -176,22 +186,21 @@ bool Game::checkCollision(const SDL_Rect& rect1, const SDL_Rect& rect2)
            rect1.y + rect1.h > rect2.y;
 }
 
+//checking for collision between an object and a platform
 bool Game::checkPlatformCollision(const SDL_Rect& rect1, const SDL_Rect& rect2) 
 {
     return rect1.x < rect2.x + rect2.w &&
            rect1.x + rect1.w > rect2.x &&
            rect1.y < rect2.y + rect2.h &&
-           rect1.y + rect1.h > rect2.y;
+           rect1.y + rect1.h >= rect2.y;
 }
 
+//running the game
 void Game::run() {
     while (!quit) {
         handleEvents();
         update();
-        if (gamestate == STARTUP)
-        { 
-            renderStartup();
-        }
+        if (gamestate == STARTUP) renderStartup();
         else if (gamestate == level1){
             spooder.update();
             renderLevel1();
@@ -211,6 +220,7 @@ bool Game::isPointInsideRect(int x, int y, SDL_Rect rect) {
     return x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h;
 }
 
+//handling for events
 void Game::handleEvents() {
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -230,7 +240,6 @@ void Game::handleEvents() {
                             instructionsStartTime = SDL_GetTicks();
                         }
                     }
-                    // Add more conditions for other states if needed
                 }
                 break;
             case SDL_KEYDOWN:
@@ -246,12 +255,9 @@ void Game::handleEvents() {
                         spooder.resetVelocity();
                         break;
                     case SDLK_w:
-                        // Implement jump logic here
-                        // For simplicity, you can move Spiderman vertically up for a short duration
                         spooder.jump();
                         break;
                     case SDLK_p:
-                        // Shoot a web when the 'P' button is pressed
                         spooder.shootWeb();
                         break;
                     }
@@ -266,8 +272,6 @@ void Game::handleEvents() {
                         break;
                     }
                 break;
-            
-
         }
     }
 }
@@ -281,6 +285,7 @@ void Game::update() {
                 showInstructions = false;
             }
         }
+        Mix_PlayMusic(backgroundMusic, -1);
     }
     else if (gamestate == level1)
     {
@@ -299,9 +304,7 @@ void Game::update() {
             const int backgroundScrollSpeed = 1;
             backgroundX += backgroundScrollSpeed;
 
-            // Check if the background is completely off-screen to the left
             if (backgroundX >= 1000) {
-                // Reset to the right edge of the window
                 backgroundX = 0;
             }
         }
@@ -309,40 +312,50 @@ void Game::update() {
         // Check collision between Spiderman and projectiles
         for (auto& projectile : gg.getProjectiles()) {
             if (checkCollision(spooder.getMoverRect(), projectile->getMoverRect())) {
-                // Handle collision, for example, decrease Spiderman's health
-                spooder - 10;
-                // You can also mark the projectile for deletion here if needed
+                spooder - 8;
+                
                 projectile->markForDeletion();
             }
+            else if (checkPlatformCollision(projectile->getMoverRect(), {300, 420, 200, 25}) 
+                  || checkPlatformCollision(projectile->getMoverRect(), {600, 300, 200, 25})) 
+                projectile->markForDeletion();
         }
         // Check if spiderman picked up the powerups or not
         for (auto& powerUp : powerUps) {
         if (checkCollision(spooder.getMoverRect(), powerUp->getMoverRect())) {
-            // Handle collision, for example, apply the power-up
+           
             powerUp->applyPowerUp(spooder);
-            // You can also mark the power-up for deletion here if needed
+            
             powerUp->MarkForDeletion();
             }
         }
         // Check if spiderman's webs collide with goblin or not
-        for (auto& it : spooder.getWebs()) {
-            if ((checkCollision(gg.getMoverRect(), it->getMoverRect())) or (checkCollision({300, 470, 200, 20}, it->getMoverRect()))) 
+        for (auto& web : spooder.getWebs()) {
+            if ((checkCollision(gg.getMoverRect(), web->getMoverRect())) or (checkCollision(gg.getMoverRect(), {300, 470, 200, 20}))) 
             {
-                // here we will call function that will reduce goblin's health
                 gg.takeDamage(spooder.getDamage());
-                // You can also mark the projectile for deletion here if needed
-                it->markForDeletion();
+                
+                web->markForDeletion();
             }
+            else if (checkPlatformCollision(web->getMoverRect(), {300, 420, 200, 25}) 
+                  || checkPlatformCollision(web->getMoverRect(), {600, 300, 200, 25})) 
+                web->markForDeletion();
         }
 
         // Update spiderman attack boost
         spooder.updateAttackBoost();
+        spooder.updateWeb();
         gg.update();
 
-        //SUSSY BAKA
-        if (checkPlatformCollision(spooder.getMoverRect(), {300, 470, 200, 20})) {
-        // If there's a collision, adjust Spiderman's position and velocity
-        spooder.handleCollision({300, 470, 200, 20});
+       
+        if (checkPlatformCollision(spooder.getMoverRect(), {300, 420, 200, 25})) {
+       
+        spooder.handleCollision({300, 420, 200, 25});
+        }
+
+        if (checkPlatformCollision(spooder.getMoverRect(), {600, 300, 200, 25})) {
+        
+        spooder.handleCollision({600, 300, 200, 25});
         }
     }
 }
@@ -357,20 +370,17 @@ void Game::renderLevel1() {
     SDL_Rect backgroundRectExtra = { backgroundX - 1000, 0, 1000, 600 };
     SDL_RenderCopy(renderer, backgroundTexture, nullptr, &backgroundRectExtra);
 
-
-        // Render the ground platform
+    // Render the ground platform
     SDL_Rect groundPlatformCoords = {-20, 550, 1200, 100};
     SDL_RenderCopy(renderer, platformTexture, &platformRect, &groundPlatformCoords);
 
     // Render the first elevated platform
-    SDL_Rect elevatedPlatform1Coords = {300, 470, 200, 20}; // Adjust the position and size
+    SDL_Rect elevatedPlatform1Coords = {300, 420, 200, 20}; // Adjust the position and size
     SDL_RenderCopy(renderer, platformTexture, &platformRect, &elevatedPlatform1Coords);
 
     // Render the second elevated platform
     SDL_Rect elevatedPlatform2Coords = {600, 300, 200, 20}; // Adjust the position and size
     SDL_RenderCopy(renderer, platformTexture, &platformRect, &elevatedPlatform2Coords);
-
-
 
     initializePowerUps();
 
@@ -451,10 +461,7 @@ void Game::clean() {
     SDL_DestroyWindow(window);
     IMG_Quit();
     SDL_Quit();
-
-    // Free background music
     Mix_FreeMusic(backgroundMusic);
-    // Close SDL_mixer
     Mix_CloseAudio();
 }
 

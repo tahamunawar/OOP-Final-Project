@@ -31,12 +31,19 @@ private:
     bool isJumping;
 
     int spiderHealth=100;
-    int damagePerAttack=10;
+    int damagePerAttack=5;
+
+    bool facingRight = true;
+
+    int frame = 0;
 
     bool attackBoostActive;
     Uint32 attackBoostStartTime;
     Uint32 attackBoostDuration;
     bool justLanded = true;
+
+    bool webActive = false;
+    int webStartTime = 0;
 public:
     Spiderman(){}
     Spiderman(SDL_Renderer* _renderer);
@@ -47,6 +54,8 @@ public:
     void update();
 
     void resetVelocity();
+
+    void webCounter();
     
     // Function to move Spiderman left
     void moveLeft();
@@ -56,7 +65,9 @@ public:
 
     void jump();
 
-    // void decreaseHealth();
+    void decreaseHealth();
+
+    void movingRect();
 
     int getHealth();
 
@@ -87,5 +98,5 @@ public:
     // SUSSY BAKA
     void handleCollision(const SDL_Rect&);
 
-    Spiderman operator-(int damage);
+    Spiderman operator - (int damage);
 };

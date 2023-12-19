@@ -21,7 +21,7 @@ class Goblin : public Unit
     int goblinVelocityY = 5;
     std::vector<Projectile*> projectiles; 
     Uint32 lastProjectileTime;
-    // Uint32 currentTime;
+    int projectileTime = 1000;
 
 };
 

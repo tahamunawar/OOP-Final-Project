@@ -6,6 +6,7 @@
     #include <SDL.h>
     #include <SDL_image.h>
     #include <SDL_ttf.h>
+    #include <SDL_mixer.h>
 #endif
 
 #include "powerup.hpp"
@@ -14,8 +15,6 @@
 
 enum GameState {
     STARTUP,
-    MAIN_GAME,
-    // Add more states if needed
     level1, 
     gameOver,
     gameWon
@@ -39,6 +38,7 @@ private:
     void clean();
     GameState gamestate;
 
+    Mix_Music* backgroundMusic;
     SDL_Window* window;
     SDL_Renderer* renderer;
 

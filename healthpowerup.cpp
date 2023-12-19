@@ -18,6 +18,7 @@ void HealthPowerUp::render()
     SDL_RenderCopy(renderer, healthPowerUpTexture, &srcRect, &moverRect);
 }
 
+//when health powerup collides with spiderman
 void HealthPowerUp::applyPowerUp(Spiderman& s)
 {
     s.increaseHealth();

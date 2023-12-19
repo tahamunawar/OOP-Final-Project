@@ -12,5 +12,7 @@ class PowerUp : public Unit
     void MarkForDeletion();
     virtual void render(){};
     virtual ~PowerUp(){};
+    void move();
+    int movingSpeed = 2;
     
 };

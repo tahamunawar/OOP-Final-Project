@@ -49,16 +49,6 @@ bool Projectile::isMarkedForDeletion()
     return markedForDeletion;
 }
 
-// void Projectile::setMovingSpeed(int value)
-// {
-//     movingSpeed = value;
-// }
-
-// void Projectile::setDamageDealt(int value)
-// {
-//     damageDealt = value;
-// }
-
 Projectile::~Projectile()
 {
     SDL_DestroyTexture(projectileTexture);

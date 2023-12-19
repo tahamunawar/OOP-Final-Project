@@ -10,7 +10,7 @@ Spiderman::Spiderman(SDL_Renderer* _renderer) : velocityX(0), velocityY(0), grav
         SDL_DestroyTexture(spidermanTexture);
     }
     srcRect = {23, 79, 23, 44};
-    moverRect = {50, 420, 80, 130};
+    moverRect = {50, 450, 50, 100};
 
     // attack boost text stuff
     // Initialize SDL_ttf
@@ -37,7 +37,8 @@ Spiderman::Spiderman(SDL_Renderer* _renderer) : velocityX(0), velocityY(0), grav
 
 void Spiderman::render()
 {
-    SDL_RenderCopy(renderer, spidermanTexture, &srcRect, &moverRect);
+    SDL_RendererFlip flip = facingRight ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL;
+    SDL_RenderCopyEx(renderer, spidermanTexture, &srcRect, &moverRect, 0, nullptr, flip);
     renderHealthText();
     renderAttackBoostMessage();
     if (!webs.empty())
@@ -51,12 +52,24 @@ void Spiderman::render()
 
 void Spiderman::moveLeft()
 {
+    movingRect();
     velocityX = -5; // Adjust the value based on your game
+    facingRight = false;
 }
 
 void Spiderman::moveRight()
 {
+    movingRect();
     velocityX = 5; // Adjust the value based on your game
+    facingRight = true;
+}
+
+void Spiderman::movingRect(){
+    if (!isJumping){
+        moverRect.w = 75;
+        moverRect.h = 80;
+        if (velocityX == 0) moverRect.y += 20;
+    }
 }
 
 void Spiderman::resetVelocity()
@@ -67,6 +80,9 @@ void Spiderman::jump()
 {
     if (!isJumping)
     {
+        moverRect.w = 75;
+        moverRect.h = 80;
+        srcRect = {228, 143, 41, 38};
         velocityY = -12; // Adjust the value based on your game
         isJumping = true;
     }
@@ -92,31 +108,60 @@ void Spiderman::jump()
 
 void Spiderman::update() {
     // Only update the position if Spiderman has not just landed
-    if (!justLanded) {
-        moverRect.x += static_cast<int>(velocityX);
-        moverRect.y += static_cast<int>(velocityY);
+    
+    moverRect.x += static_cast<int>(velocityX);
+    moverRect.y += static_cast<int>(velocityY);
 
-        // Apply gravity
-        velocityY += gravity;
+    // Apply gravity
+    velocityY += gravity;
 
         // Check if Spiderman is on the ground (you might need to adjust this based on your game)
-        if (moverRect.y >= 420)
+        if (moverRect.y >= 550 - moverRect.h)
         {
-            moverRect.y = 420;
             isJumping = false;
             velocityY = 0;
+            
+            if (!webActive || (webActive && SDL_GetTicks() - webStartTime >= 500)) {
+                webActive = false;
+                if (velocityX == 0){
+                    moverRect.w = 50;
+                    moverRect.h = 100;
+
+                    srcRect = {23, 79, 23, 44};
+                }
+                else{
+                    frame = (frame + 1) % 36;
+                    switch (frame/6){
+                        case 0:
+                            srcRect = {111,399, 37, 36};
+                            break;
+                        case 1:
+                            srcRect = {158,400, 39, 35};
+                            break;
+                        case 2:
+                            srcRect = {208,400, 38, 35};
+                            break;
+                        case 3:
+                            srcRect = {260,402, 40, 34};
+                            break;
+                        case 4:
+                            srcRect = {15,400, 38, 35};
+                            break;
+                        case 5:
+                            srcRect = {61, 399, 40, 36};
+                            break;
+                    }
+                }
+            }
+            moverRect.y = 550 - moverRect.h;
         }
+        updateWeb();
     }
 
-    // Reset the justLanded flag
-    justLanded = false;
-    updateWeb();
+void Spiderman::decreaseHealth()
+{
+    spiderHealth-=5;
 }
-
-// void Spiderman::decreaseHealth()
-// {
-//     spiderHealth-=10;
-// }
 
 int Spiderman::getHealth()
 {
@@ -125,7 +170,7 @@ int Spiderman::getHealth()
 
 void Spiderman::increaseHealth()
 {
-    spiderHealth+=20;
+    spiderHealth+=50;
     if (spiderHealth>100)
         spiderHealth = 100;
 }
@@ -136,7 +181,7 @@ void Spiderman::activateAttackBoost()
     attackBoostStartTime = SDL_GetTicks();
     // Display message on the screen (you can replace this with your rendering logic)
     std::cout << "Attack boost active" << std::endl;
-    damagePerAttack = 20;
+    damagePerAttack = 10;
 }
 
 void Spiderman::updateAttackBoost()
@@ -147,7 +192,7 @@ void Spiderman::updateAttackBoost()
         attackBoostActive = false;
         // Clear the message on the screen (you can replace this with your rendering logic)
         std::cout << "Attack boost expired" << std::endl;
-        damagePerAttack = 10;
+        damagePerAttack = 5;
     }
 }
 
@@ -209,34 +254,82 @@ void Spiderman::renderHealthText()
 // SUSSY BAKA
 void Spiderman::handleCollision(const SDL_Rect& platformRect) {
     // Check if Spiderman is moving downwards (falling)
-    if (velocityY > 0) {
         // Check if the bottom of Spiderman is above the top of the platform and
         // if the top of Spiderman is below the bottom of the platform
-        if (moverRect.y + moverRect.h > platformRect.y &&
-            moverRect.y < platformRect.y + platformRect.h) {
-            // Check if Spiderman was not on the platform in the previous frame
-            if (!justLanded) {
-                // Adjust Spiderman's position and velocity based on the collision
-                moverRect.y = platformRect.y - moverRect.h - 1; // Place Spiderman on top of the platform
-                velocityY = 0; // Stop Spiderman from falling further
-                isJumping = false; // Allow Spiderman to jump again
-
-                // Set a flag to indicate that Spiderman has just landed
-                justLanded = true;
-
-                // Add any additional logic you need for landing on a platform
-            }
-        } else {
-            // If Spiderman is not colliding with the platform, reset the justLanded flag
-            justLanded = false;
+    if (moverRect.y >= platformRect.y - moverRect.h &&
+        moverRect.y <= platformRect.y + platformRect.h - moverRect.h ) {
+        // Check if Spiderman was not on the platform in the previous frame
+    
+        // Adjust Spiderman's position and velocity based on the collision
+        if (velocityY >= 0) {
+            velocityY = 0;
+            isJumping = false;
         }
+        if (!webActive || (webActive && SDL_GetTicks() - webStartTime >= 500)) {
+            webActive = false;
+            if (velocityX == 0){
+                moverRect.w = 50;
+                moverRect.h = 100;
+
+                srcRect = {23, 79, 23, 44};
+            }
+            else{
+                frame = (frame + 1) % 36;
+                switch (frame/6){
+                    case 0:
+                        srcRect = {111,399, 37, 36};
+                        break;
+                    case 1:
+                        srcRect = {158,400, 39, 35};
+                        break;
+                    case 2:
+                        srcRect = {208,400, 38, 35};
+                        break;
+                    case 3:
+                        srcRect = {260,402, 40, 34};
+                        break;
+                    case 4:
+                        srcRect = {15,400, 38, 35};
+                        break;
+                    case 5:
+                        srcRect = {61, 399, 40, 36};
+                        break;
+                }
+            }
+        }
+        moverRect.y = platformRect.y - moverRect.h;
+
+        // Add any additional logic you need for landing on a platform
+    
+    }
+
+    else if (moverRect.y >= platformRect.y &&
+        moverRect.y <= platformRect.y + platformRect.h) {
+        moverRect.y = platformRect.y + platformRect.h;
+        velocityY = 0;
+    }
+
+    else if (moverRect.x + moverRect.w >= platformRect.x &&
+        moverRect.y + moverRect.w <= platformRect.x + platformRect.w) {
+        moverRect.x = (facingRight) ? platformRect.x - moverRect.w : platformRect.x + platformRect.w;
     }
 }
 // sussy end
 void Spiderman::shootWeb()
-{
-    Projectile* temp = new Projectile(renderer, "spiderman_sprite_sheet.png", "spider", moverRect.x + 80, moverRect.y+70);
-    webs.push_back(temp);   
+{   
+    if (!webActive){
+        Projectile* temp = new Projectile(renderer, "spiderman_sprite_sheet.png", "spider", moverRect.x + 80, moverRect.y+30);
+        webs.push_back(temp); 
+        webActive = true;
+        webStartTime = SDL_GetTicks(); 
+        moverRect.w = 80;
+        moverRect.h = 90;
+        moverRect.y += 10;
+        switch (rand() % 2){
+            case 0: srcRect = {76, 336, 39, 37}; break;
+            case 1: srcRect = {18, 336, 39, 37}; break;
+        }
+    }
 }
 
 void Spiderman::updateWeb()
@@ -264,12 +357,12 @@ const std::vector<Projectile*>& Spiderman::getWebs() const
 }
 
 int Spiderman::getDamage()
+
 {
     return damagePerAttack;
 }
 
-Spiderman Spiderman::operator-(int damage) {
-    // Subtract the damage from Spiderman's health
+Spiderman Spiderman::operator-(int damage){
     spiderHealth -= damage;
     return *this;
 }

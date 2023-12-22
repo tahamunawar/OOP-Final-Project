@@ -15,7 +15,6 @@ using namespace std;
 class Unit {
 public:
     SDL_Rect srcRect, moverRect;
-    bool operator==(const Unit& u1) const;
     SDL_Rect getMoverRect() const;
 };
 
